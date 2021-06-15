@@ -11,24 +11,24 @@ import androidx.databinding.DataBindingUtil;
 
 import com.smihajlovski.instabackstack.R;
 import com.smihajlovski.instabackstack.databinding.FragmentHomeBinding;
-import com.smihajlovski.instabackstack.ui.base.BaseFragment;
 import com.smihajlovski.instabackstack.utils.FragmentUtils;
+import com.smihajlovski.instabackstack.ui.base.BaseFragment2;
 
 import static com.smihajlovski.instabackstack.common.Constants.EXTRA_IS_ROOT_FRAGMENT;
 import static com.smihajlovski.instabackstack.common.Constants.HOME_FRAGMENT;
 
-public class HomeFragment extends BaseFragment {
+public class HomeFragment2 extends BaseFragment2 {
 
     static final String ACTION_DASHBOARD = HOME_FRAGMENT + "action.dashboard";
     private FragmentHomeBinding binder;
 
-    public HomeFragment() {
+    public HomeFragment2() {
     }
 
-    public static HomeFragment newInstance(boolean isRoot) {
+    public static HomeFragment2 newInstance(boolean isRoot) {
         Bundle args = new Bundle();
         args.putBoolean(EXTRA_IS_ROOT_FRAGMENT, isRoot);
-        HomeFragment fragment = new HomeFragment();
+        HomeFragment2 fragment = new HomeFragment2();
         fragment.setArguments(args);
         return fragment;
     }
@@ -42,6 +42,6 @@ public class HomeFragment extends BaseFragment {
     }
 
     private void init() {
-        binder.button.setOnClickListener(v -> FragmentUtils.sendActionToActivity(ACTION_DASHBOARD, currentTab, true, fragmentInteractionCallback));
+        binder.button.setOnClickListener(v -> FragmentUtils.INSTANCE.sendActionToActivity(ACTION_DASHBOARD, currentTab, true, fragmentInteractionCallback));
     }
 }

@@ -14,9 +14,9 @@ import androidx.fragment.app.Fragment;
 
 import org.jetbrains.annotations.NotNull;
 
-public class BaseFragment extends Fragment {
+public class BaseFragment2 extends Fragment {
 
-    protected FragmentInteractionCallback fragmentInteractionCallback;
+    protected IFragmentInteraction fragmentInteractionCallback;
     protected static String currentTab;
 
     @Override
@@ -24,9 +24,9 @@ public class BaseFragment extends Fragment {
         printFragmentLifecycle("onAttach");
         super.onAttach(context);
         try {
-            fragmentInteractionCallback = (FragmentInteractionCallback) context;
+            fragmentInteractionCallback = (IFragmentInteraction) context;
         } catch (ClassCastException e) {
-            throw new RuntimeException(context.toString() + " must implement " + FragmentInteractionCallback.class.getName());
+            throw new RuntimeException(context.toString() + " must implement " + IFragmentInteraction.class.getName());
         }
     }
 
@@ -37,13 +37,8 @@ public class BaseFragment extends Fragment {
         super.onDetach();
     }
 
-    public interface FragmentInteractionCallback {
-
-        void onFragmentInteractionCallback(Bundle bundle);
-    }
-
     public static void setCurrentTab(String currentTab) {
-        BaseFragment.currentTab = currentTab;
+        BaseFragment2.currentTab = currentTab;
     }
 
     @Nullable

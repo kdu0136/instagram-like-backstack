@@ -11,24 +11,24 @@ import androidx.databinding.DataBindingUtil;
 
 import com.smihajlovski.instabackstack.R;
 import com.smihajlovski.instabackstack.databinding.FragmentNotificationsBinding;
-import com.smihajlovski.instabackstack.ui.base.BaseFragment;
+import com.smihajlovski.instabackstack.utils.FragmentUtils;
+import com.smihajlovski.instabackstack.ui.base.BaseFragment2;
 
 import static com.smihajlovski.instabackstack.common.Constants.EXTRA_IS_ROOT_FRAGMENT;
 import static com.smihajlovski.instabackstack.common.Constants.NOTIFICATIONS_FRAGMENT;
-import static com.smihajlovski.instabackstack.utils.FragmentUtils.sendActionToActivity;
 
-public class NotificationsFragment extends BaseFragment {
+public class NotificationsFragment2 extends BaseFragment2 {
 
     static final String ACTION_DASHBOARD = NOTIFICATIONS_FRAGMENT + "action.dashboard";
     private FragmentNotificationsBinding binder;
 
-    public NotificationsFragment() {
+    public NotificationsFragment2() {
     }
 
-    public static NotificationsFragment newInstance(boolean isRoot) {
+    public static NotificationsFragment2 newInstance(boolean isRoot) {
         Bundle args = new Bundle();
         args.putBoolean(EXTRA_IS_ROOT_FRAGMENT, isRoot);
-        NotificationsFragment fragment = new NotificationsFragment();
+        NotificationsFragment2 fragment = new NotificationsFragment2();
         fragment.setArguments(args);
         return fragment;
     }
@@ -42,6 +42,6 @@ public class NotificationsFragment extends BaseFragment {
     }
 
     private void init() {
-        binder.button.setOnClickListener(v -> sendActionToActivity(ACTION_DASHBOARD, currentTab, true, fragmentInteractionCallback));
+        binder.button.setOnClickListener(v -> FragmentUtils.INSTANCE.sendActionToActivity(ACTION_DASHBOARD, currentTab, true, fragmentInteractionCallback));
     }
 }
