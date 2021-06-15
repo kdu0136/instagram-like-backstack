@@ -9,21 +9,21 @@ import com.smihajlovski.instabackstack.common.Constants
 import java.io.Serializable
 import java.util.*
 
-class FragmentStackManager<FragmentType : Serializable>(
+class FragmentStackManager<TabType : Serializable>(
     private val fragmentManager: FragmentManager,
-    private val tabFragments: HashMap<FragmentType, Fragment>,
-    tabs: List<FragmentType>
+    private val tabFragments: HashMap<TabType, Fragment>,
+    tabs: List<TabType>
 ) {
-    private val tagStacks: HashMap<FragmentType, Stack<String>>
-    private val stackList: List<FragmentType>
-    private val menuStacks: MutableList<FragmentType> = mutableListOf()
+    private val tagStacks: HashMap<TabType, Stack<String>>
+    private val stackList: List<TabType>
+    private val menuStacks: MutableList<TabType> = mutableListOf()
 
-    private lateinit var currentTab: FragmentType
+    private lateinit var currentTab: TabType
     private lateinit var currentFragment: Fragment
 
     init {
-        val tagStacks = hashMapOf<FragmentType, Stack<String>>()
-        val stackList = mutableListOf<FragmentType>()
+        val tagStacks = hashMapOf<TabType, Stack<String>>()
+        val stackList = mutableListOf<TabType>()
         tabs.forEach {
             tagStacks[it] = Stack<String>()
             stackList.add(it)
@@ -33,7 +33,7 @@ class FragmentStackManager<FragmentType : Serializable>(
         this.menuStacks.add(tabs.first())
     }
 
-    fun selectTab(tabType: FragmentType) {
+    fun selectTab(tabType: TabType, isFirstTab: Boolean) {
         currentTab = tabType
 
         val tagStack: Stack<String> = tagStacks[tabType] ?: return
@@ -43,28 +43,24 @@ class FragmentStackManager<FragmentType : Serializable>(
               We are adding a new fragment which is not present in stack. So add to stack is true.
              */
             val tabFragment: Fragment = tabFragments[tabType] ?: return
-            when (tabType) {
-                FragmentUtils.FragmentDirection.HOME -> {
-                    addInitialTabFragment(
-                        fragmentManager = fragmentManager,
-                        tag = tabType,
-                        fragment = tabFragment,
-                        layoutId = R.id.frame_layout,
-                        shouldAddToStack = true,
-                    )
-                }
-                FragmentUtils.FragmentDirection.DASH_BOARD,
-                FragmentUtils.FragmentDirection.NOTIFICATION, -> {
-                    addAdditionalTabFragment(
-                        fragmentManager = fragmentManager,
-                        tag = tabType,
-                        showFragment = tabFragment,
-                        hideFragment = currentFragment,
-                        layoutId = R.id.frame_layout,
-                        shouldAddToStack = true,
-                    )
-                }
-            }
+            if (isFirstTab)
+                addInitialTabFragment(
+                    fragmentManager = fragmentManager,
+                    tag = tabType,
+                    fragment = tabFragment,
+                    layoutId = R.id.frame_layout,
+                    shouldAddToStack = true,
+                )
+            else
+                addAdditionalTabFragment(
+                    fragmentManager = fragmentManager,
+                    tag = tabType,
+                    showFragment = tabFragment,
+                    hideFragment = currentFragment,
+                    layoutId = R.id.frame_layout,
+                    shouldAddToStack = true,
+                )
+
             resolveStackLists(tabId = tabType)
             currentFragment = tabFragment
         } else {
@@ -84,22 +80,22 @@ class FragmentStackManager<FragmentType : Serializable>(
         }
     }
 
-    private fun resolveStackLists(tabId: FragmentType) {
+    private fun resolveStackLists(tabId: TabType) {
         stackList.updateStackIndex(tabId = tabId)
         menuStacks.updateTabStackIndex(tabId = tabId)
     }
 
-    fun resolveBackPressed(finish: () -> Unit, selectItemId: (Int) -> Unit) {
+    fun resolveBackPressed(finish: () -> Unit, currentTabType: (TabType) -> Unit) {
         var stackValue = 0
         val tagStack: Stack<String> = tagStacks[currentTab] ?: return
         if (tagStack.size == 1) {
             val value: Stack<String> = tagStacks[stackList[1]] ?: return
             if (value.size > 1) {
                 stackValue = value.size
-                popAndNavigateToPreviousMenu(selectItemId = selectItemId)
+                popAndNavigateToPreviousMenu(currentTabType = currentTabType)
             }
             if (stackValue <= 1) {
-                if (menuStacks.size > 1) navigateToPreviousMenu(selectItemId = selectItemId)
+                if (menuStacks.size > 1) navigateToPreviousMenu(currentTabType = currentTabType)
                 else finish()
             }
         } else {
@@ -107,10 +103,10 @@ class FragmentStackManager<FragmentType : Serializable>(
         }
     }
 
-    private fun popAndNavigateToPreviousMenu(selectItemId: (Int) -> Unit) {
-        val tempCurrent: FragmentType = stackList.firstOrNull() ?: return
+    private fun popAndNavigateToPreviousMenu(currentTabType: (TabType) -> Unit) {
+        val tempCurrent: TabType = stackList.firstOrNull() ?: return
         currentTab = stackList[1]
-        selectItemId(resolveTabPositions(currentTab = currentTab))
+        currentTabType(currentTab)
 
         val tagStack: Stack<String> = tagStacks[currentTab] ?: return
         val targetFragment: Fragment =
@@ -125,10 +121,10 @@ class FragmentStackManager<FragmentType : Serializable>(
         menuStacks.removeFirst()
     }
 
-    private fun navigateToPreviousMenu(selectItemId: (Int) -> Unit) {
+    private fun navigateToPreviousMenu(currentTabType: (TabType) -> Unit) {
         menuStacks.removeFirst()
         currentTab = menuStacks.firstOrNull() ?: return
-        selectItemId(resolveTabPositions(currentTab = currentTab))
+        currentTabType(currentTab)
 
         val tagStack: Stack<String> = tagStacks[currentTab] ?: return
         val targetFragment: Fragment =
@@ -139,13 +135,6 @@ class FragmentStackManager<FragmentType : Serializable>(
             hideFragment = currentFragment,
         )
         currentFragment = targetFragment
-    }
-
-    private fun resolveTabPositions(currentTab: FragmentType) = when (currentTab) {
-        FragmentUtils.FragmentDirection.HOME -> R.id.tab_home
-        FragmentUtils.FragmentDirection.DASH_BOARD -> R.id.tab_dashboard
-        FragmentUtils.FragmentDirection.NOTIFICATION -> R.id.tab_notifications
-        else -> 0
     }
 
     private fun popFragment() {
@@ -219,7 +208,7 @@ class FragmentStackManager<FragmentType : Serializable>(
      */
     private fun addInitialTabFragment(
         fragmentManager: FragmentManager,
-        tag: FragmentType,
+        tag: TabType,
         fragment: Fragment,
         @IdRes layoutId: Int,
         shouldAddToStack: Boolean,
@@ -238,7 +227,7 @@ class FragmentStackManager<FragmentType : Serializable>(
      */
     private fun addAdditionalTabFragment(
         fragmentManager: FragmentManager,
-        tag: FragmentType,
+        tag: TabType,
         showFragment: Fragment,
         hideFragment: Fragment,
         @IdRes layoutId: Int,
@@ -276,7 +265,7 @@ class FragmentStackManager<FragmentType : Serializable>(
      */
     private fun addShowHideFragment(
         fragmentManager: FragmentManager,
-        tag: FragmentType,
+        tag: TabType,
         showFragment: Fragment,
         hideFragment: Fragment,
         @IdRes layoutId: Int,
@@ -285,6 +274,10 @@ class FragmentStackManager<FragmentType : Serializable>(
         val fragmentTag = showFragment.createFragmentTag()
         fragmentManager
             .beginTransaction()
+            .setCustomAnimations(
+                R.anim.anim_slide_in_right,
+                R.anim.anim_slide_out_left,
+            )
             .add(layoutId, showFragment, fragmentTag)
             .show(showFragment)
             .hide(hideFragment)
@@ -300,6 +293,10 @@ class FragmentStackManager<FragmentType : Serializable>(
     ) {
         fragmentManager
             .beginTransaction()
+            .setCustomAnimations(
+                R.anim.anim_slide_in_left,
+                R.anim.anim_slide_out_right
+            )
             .remove(removeFragment)
             .show(showFragment)
             .commit()

@@ -46,7 +46,7 @@ class MainActivity :
                     else -> null
                 }
                 if (tabType != null)
-                    fragmentStackManager.selectTab(tabType = tabType)
+                    fragmentStackManager.selectTab(tabType = tabType, isFirstTab = tabType == FragmentDirection.HOME)
 
                 tabType != null
             }
@@ -79,7 +79,14 @@ class MainActivity :
     override fun onBackPressed() {
         fragmentStackManager.resolveBackPressed(
             finish = this::finish,
-            selectItemId = binding.bottomNavigationView::setSelectedItemId
+            currentTabType = {
+                val selectItemId = when (it) {
+                    FragmentDirection.HOME -> R.id.tab_home
+                    FragmentDirection.DASH_BOARD -> R.id.tab_dashboard
+                    FragmentDirection.NOTIFICATION -> R.id.tab_notifications
+                }
+                binding.bottomNavigationView.selectedItemId = selectItemId
+            }
         )
     }
 }
