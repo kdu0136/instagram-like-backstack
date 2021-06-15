@@ -108,13 +108,11 @@ object FragmentUtils {
      */
     fun sendActionToActivity(
         action: String,
-        tab: String,
         shouldAdd: Boolean,
         fragmentInteractionCallback: IFragmentInteraction,
     ) {
         val bundle = Bundle().apply {
             putString(Constants.ACTION, action)
-            putString(Constants.DATA_KEY_1, tab)
             putBoolean(Constants.DATA_KEY_2, shouldAdd)
         }
         fragmentInteractionCallback.onInteractionCallback(bundle)

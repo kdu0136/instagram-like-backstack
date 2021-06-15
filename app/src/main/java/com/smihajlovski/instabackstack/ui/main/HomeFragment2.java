@@ -42,6 +42,6 @@ public class HomeFragment2 extends BaseFragment2 {
     }
 
     private void init() {
-        binder.button.setOnClickListener(v -> FragmentUtils.INSTANCE.sendActionToActivity(ACTION_DASHBOARD, currentTab, true, fragmentInteractionCallback));
+        binder.button.setOnClickListener(v -> FragmentUtils.INSTANCE.sendActionToActivity(ACTION_DASHBOARD, true, fragmentInteractionCallback));
     }
 }

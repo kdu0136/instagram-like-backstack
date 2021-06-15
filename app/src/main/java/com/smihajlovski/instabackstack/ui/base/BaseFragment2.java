@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class BaseFragment2 extends Fragment {
 
     protected IFragmentInteraction fragmentInteractionCallback;
-    protected static String currentTab;
+//    protected static String currentTab;
 
     @Override
     public void onAttach(Context context) {
@@ -37,9 +37,9 @@ public class BaseFragment2 extends Fragment {
         super.onDetach();
     }
 
-    public static void setCurrentTab(String currentTab) {
-        BaseFragment2.currentTab = currentTab;
-    }
+//    public static void setCurrentTab(String currentTab) {
+//        BaseFragment2.currentTab = currentTab;
+//    }
 
     @Nullable
     @org.jetbrains.annotations.Nullable

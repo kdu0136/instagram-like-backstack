@@ -47,7 +47,7 @@ public class DashboardFragment2 extends BaseFragment2 {
     }
 
     private void init() {
-        binder.button.setOnClickListener(v -> FragmentUtils.INSTANCE.sendActionToActivity(ACTION_NOTIFICATION, currentTab, true, fragmentInteractionCallback));
+        binder.button.setOnClickListener(v -> FragmentUtils.INSTANCE.sendActionToActivity(ACTION_NOTIFICATION, true, fragmentInteractionCallback));
     }
     @Override
     public void onViewCreated(@NonNull @NotNull View view, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {

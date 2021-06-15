@@ -3,7 +3,7 @@ package com.smihajlovski.instabackstack.common;
 public class Constants {
 
     public static final String ACTION = ".action";
-    public static final String DATA_KEY_1 = ".data_key_1";
+//    public static final String DATA_KEY_1 = ".data_key_1";
     public static final String DATA_KEY_2 = ".data_key_2";
 
     public static final String TAB_HOME = "tab_home";

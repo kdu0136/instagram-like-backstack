@@ -1,15 +1,15 @@
 package com.smihajlovski.instabackstack.utils
 
 import android.os.Bundle
-import androidx.annotation.IdRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.smihajlovski.instabackstack.R
 import com.smihajlovski.instabackstack.common.Constants.*
 import com.smihajlovski.instabackstack.ui.base.BaseFragment2
+import java.io.Serializable
 import java.util.*
 
-class FragmentStackManager(
+class FragmentStackManager<T: Serializable>(
     private val fragmentManager: FragmentManager,
     private val tabFragments: HashMap<String, Fragment>,
     tabs: List<String>
@@ -35,7 +35,6 @@ class FragmentStackManager(
 
     fun selectTab(tabId: String) {
         currentTab = tabId
-        BaseFragment2.setCurrentTab(currentTab)
 
         val tagStack: Stack<String> = tagStacks[tabId] ?: return
         if (tagStack.size == 0) {
@@ -113,7 +112,6 @@ class FragmentStackManager(
     private fun popAndNavigateToPreviousMenu(selectItemId: (Int) -> Unit) {
         val tempCurrent: String = stackList.firstOrNull() ?: return
         currentTab = stackList[1]
-        BaseFragment2.setCurrentTab(currentTab)
         selectItemId(resolveTabPositions(currentTab = currentTab))
 
         val tagStack: Stack<String> = tagStacks[currentTab] ?: return
@@ -132,7 +130,6 @@ class FragmentStackManager(
     private fun navigateToPreviousMenu(selectItemId: (Int) -> Unit) {
         menuStacks.removeFirst()
         currentTab = menuStacks.firstOrNull() ?: return
-        BaseFragment2.setCurrentTab(currentTab)
         selectItemId(resolveTabPositions(currentTab = currentTab))
 
         val tagStack: Stack<String> = tagStacks[currentTab] ?: return
@@ -179,14 +176,16 @@ class FragmentStackManager(
         if (tagStack.size == 1) return
 
         do {
-            val peekFragment: Fragment = fragmentManager.findFragmentByTag(tagStack.peek()) ?: return
+            val peekFragment: Fragment =
+                fragmentManager.findFragmentByTag(tagStack.peek()) ?: return
             val peekFragmentArgs: Bundle = peekFragment.arguments ?: return
 
             fragmentManager.beginTransaction().remove(peekFragment)
             tagStack.pop()
         } while (tagStack.isNotEmpty() && peekFragmentArgs.getBoolean("EXTRA_IS_ROOT_FRAGMENT"))
 
-        val fragment: Fragment = fragmentManager.findFragmentByTag(tagStack.firstElement()) ?: return
+        val fragment: Fragment =
+            fragmentManager.findFragmentByTag(tagStack.firstElement()) ?: return
         FragmentUtils.removeFragment(
             fragmentManager = fragmentManager,
             showFragment = fragment,
@@ -196,13 +195,12 @@ class FragmentStackManager(
     }
 
     fun showFragment(bundle: Bundle, fragment: Fragment) {
-        val tab: String = bundle.getString(DATA_KEY_1) ?: return
         val shouldAdd: Boolean = bundle.getBoolean(DATA_KEY_2)
 
         FragmentUtils.addShowHideFragment(
             fragmentManager = fragmentManager,
             tagStacks = tagStacks,
-            tag = tab,
+            tag = currentTab,
             showFragment = fragment,
             hideFragment = getCurrentFragmentFromShownStack(),
             layoutId = R.id.frame_layout,
@@ -212,8 +210,10 @@ class FragmentStackManager(
     }
 
     private fun getCurrentFragmentFromShownStack(): Fragment {
-        val tagStack: Stack<String> = tagStacks[currentTab] ?: throw NullPointerException("tagStacks[currentTab] is NULL")
-        return fragmentManager.findFragmentByTag(tagStack.elementAt(tagStack.size - 1)) ?: throw NullPointerException("can not find findFragmentByTag")
+        val tagStack: Stack<String> =
+            tagStacks[currentTab] ?: throw NullPointerException("tagStacks[currentTab] is NULL")
+        return fragmentManager.findFragmentByTag(tagStack.elementAt(tagStack.size - 1))
+            ?: throw NullPointerException("can not find findFragmentByTag")
     }
 }
 

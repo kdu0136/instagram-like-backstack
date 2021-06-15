@@ -9,7 +9,6 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.smihajlovski.instabackstack.R;
 import com.smihajlovski.instabackstack.databinding.ActivityMainBinding;
-import com.smihajlovski.instabackstack.ui.base.BaseFragment2;
 import com.smihajlovski.instabackstack.ui.base.IFragmentInteraction;
 import com.smihajlovski.instabackstack.utils.FragmentStackManager;
 import com.smihajlovski.instabackstack.utils.FragmentUtils;
@@ -23,17 +22,13 @@ import java.util.List;
 import kotlin.Unit;
 
 import static com.smihajlovski.instabackstack.common.Constants.ACTION;
-import static com.smihajlovski.instabackstack.common.Constants.DATA_KEY_1;
-import static com.smihajlovski.instabackstack.common.Constants.DATA_KEY_2;
-import static com.smihajlovski.instabackstack.common.Constants.EXTRA_IS_ROOT_FRAGMENT;
 import static com.smihajlovski.instabackstack.common.Constants.TAB_DASHBOARD;
 import static com.smihajlovski.instabackstack.common.Constants.TAB_HOME;
 import static com.smihajlovski.instabackstack.common.Constants.TAB_NOTIFICATIONS;
-import static com.smihajlovski.instabackstack.utils.StackListManagerKt.updateStackToIndexFirst;
 
 public class MainActivity2 extends AppCompatActivity implements IFragmentInteraction {
 
-    private FragmentStackManager fragmentStackManager;
+    private FragmentStackManager<FragmentUtils.FragmentDirection> fragmentStackManager;
 
     private ActivityMainBinding binder;
 
