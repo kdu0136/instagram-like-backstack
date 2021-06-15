@@ -10,12 +10,10 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import com.smihajlovski.instabackstack.tmp.NavigatorDestination
+import com.smihajlovski.instabackstack.tmp.createDataBinding
 
 abstract class BaseFragment<VB : ViewDataBinding, NT : NavigatorDestination>(@LayoutRes private val resId: Int) :
     Fragment(), IBaseFragmentAct {
-    interface FragmentInteractionCallback {
-        fun onFragmentInteractionCallback(bundle: Bundle)
-    }
 
     companion object {
         protected var currentTab: String = ""
@@ -23,7 +21,7 @@ abstract class BaseFragment<VB : ViewDataBinding, NT : NavigatorDestination>(@La
 
     protected val fragmentTag = javaClass.simpleName
 
-    protected var fragmentInteractionCallback: FragmentInteractionCallback? = null
+    protected var fragmentInteractionCallback: IFragmentInteraction? = null
 
     private lateinit var mBinding: VB
     protected val binding: VB
@@ -59,9 +57,9 @@ abstract class BaseFragment<VB : ViewDataBinding, NT : NavigatorDestination>(@La
         printFragmentLifecycle(name = object {}.javaClass.enclosingMethod?.name.toString())
         super.onAttach(context)
         try {
-            fragmentInteractionCallback = context as FragmentInteractionCallback
+            fragmentInteractionCallback = context as IFragmentInteraction
         } catch (e: ClassCastException) {
-            throw RuntimeException("$context must implement ${FragmentInteractionCallback::class.java.simpleName}")
+            throw RuntimeException("$context must implement ${IFragmentInteraction::class.java.simpleName}")
         }
     }
 
@@ -73,6 +71,7 @@ abstract class BaseFragment<VB : ViewDataBinding, NT : NavigatorDestination>(@La
         printFragmentLifecycle(name = object {}.javaClass.enclosingMethod?.name.toString())
         super.onCreateView(inflater, container, savedInstanceState)
 
+        mBinding = createDataBinding(resId = resId, context = requireContext())
         return mBinding.root
     }
 

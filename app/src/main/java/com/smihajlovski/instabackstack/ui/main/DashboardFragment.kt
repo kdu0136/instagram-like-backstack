@@ -8,6 +8,7 @@ import com.smihajlovski.instabackstack.tmp.Dummy
 import com.smihajlovski.instabackstack.tmp.FeedMainAdapter
 import com.smihajlovski.instabackstack.tmp.NavigatorDestination
 import com.smihajlovski.instabackstack.ui.base.BaseFragment
+import com.smihajlovski.instabackstack.utils.FragmentUtils
 
 class DashboardFragment:
     BaseFragment<FragmentDashboardBinding, NavigatorDestination>(resId = R.layout.fragment_dashboard) {
@@ -18,7 +19,11 @@ class DashboardFragment:
         binding.recyclerView.adapter = adapter
 
         binding.button.setOnClickListener {
-
+            FragmentUtils.sendActionToActivity(
+                action = FragmentUtils.FragmentDirection.NOTIFICATION,
+                shouldAdd = true,
+                fragmentInteractionCallback = fragmentInteractionCallback
+            )
         }
     }
 

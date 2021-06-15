@@ -10,13 +10,18 @@ import com.smihajlovski.instabackstack.tmp.Dummy
 import com.smihajlovski.instabackstack.tmp.FeedMainAdapter
 import com.smihajlovski.instabackstack.tmp.NavigatorDestination
 import com.smihajlovski.instabackstack.ui.base.BaseFragment
+import com.smihajlovski.instabackstack.utils.FragmentUtils
 
 class NotificationFragment:
     BaseFragment<FragmentNotificationsBinding, NavigatorDestination>(resId = R.layout.fragment_notifications) {
 
     override fun onSetupUI() {
         binding.button.setOnClickListener {
-
+            FragmentUtils.sendActionToActivity(
+                action = FragmentUtils.FragmentDirection.DASH_BOARD,
+                shouldAdd = true,
+                fragmentInteractionCallback = fragmentInteractionCallback
+            )
         }
     }
 
