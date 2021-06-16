@@ -1,6 +1,7 @@
 package com.smihajlovski.instabackstack.tmp
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.databinding.DataBindingUtil
@@ -11,7 +12,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.smihajlovski.instabackstack.R
 import com.smihajlovski.instabackstack.databinding.ItemFeedMainBinding
 
-class FeedMainAdapter
+class FeedMainAdapter(private val click: (View, Int) -> Unit)
     : ListAdapter<PostThumb, RecyclerView.ViewHolder>(PostThumb.DiffCallBack) {
     private val constraintSet = ConstraintSet()
 
@@ -54,6 +55,10 @@ class FeedMainAdapter
                             .centerCrop()
                     )
                     .into(binding.imageView)
+            }
+
+            binding.root.setOnClickListener {
+                click(binding.imageView, item.postThumbnail)
             }
         }
     }

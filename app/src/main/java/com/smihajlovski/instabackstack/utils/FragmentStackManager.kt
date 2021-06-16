@@ -1,6 +1,7 @@
 package com.smihajlovski.instabackstack.utils
 
 import android.os.Bundle
+import android.view.View
 import androidx.annotation.IdRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -11,11 +12,10 @@ import java.util.*
 
 class FragmentStackManager<TabType : Serializable>(
     private val fragmentManager: FragmentManager,
-    private val tabFragments: HashMap<TabType, Fragment>,
-    tabs: List<TabType>
+    private val menuTabFragmentStacks: HashMap<TabType, Fragment>,
+    private val menuTabList: List<TabType>
 ) {
     private val tagStacks: HashMap<TabType, Stack<String>>
-    private val stackList: List<TabType>
     private val menuStacks: MutableList<TabType> = mutableListOf()
 
     private lateinit var currentTab: TabType
@@ -23,14 +23,11 @@ class FragmentStackManager<TabType : Serializable>(
 
     init {
         val tagStacks = hashMapOf<TabType, Stack<String>>()
-        val stackList = mutableListOf<TabType>()
-        tabs.forEach {
+        menuTabList.forEach {
             tagStacks[it] = Stack<String>()
-            stackList.add(it)
         }
         this.tagStacks = tagStacks
-        this.stackList = stackList
-        this.menuStacks.add(tabs.first())
+        this.menuStacks.add(menuTabList.first())
     }
 
     fun selectTab(tabType: TabType, isFirstTab: Boolean) {
@@ -42,7 +39,7 @@ class FragmentStackManager<TabType : Serializable>(
               First time this tab is selected. So add first fragment of that tab.
               We are adding a new fragment which is not present in stack. So add to stack is true.
              */
-            val tabFragment: Fragment = tabFragments[tabType] ?: return
+            val tabFragment: Fragment = menuTabFragmentStacks[tabType] ?: return
             if (isFirstTab)
                 addInitialTabFragment(
                     fragmentManager = fragmentManager,
@@ -81,7 +78,7 @@ class FragmentStackManager<TabType : Serializable>(
     }
 
     private fun resolveStackLists(tabId: TabType) {
-        stackList.updateStackIndex(tabId = tabId)
+        menuTabList.updateStackIndex(tabId = tabId)
         menuStacks.updateTabStackIndex(tabId = tabId)
     }
 
@@ -89,7 +86,7 @@ class FragmentStackManager<TabType : Serializable>(
         var stackValue = 0
         val tagStack: Stack<String> = tagStacks[currentTab] ?: return
         if (tagStack.size == 1) {
-            val value: Stack<String> = tagStacks[stackList[1]] ?: return
+            val value: Stack<String> = tagStacks[menuTabList[1]] ?: return
             if (value.size > 1) {
                 stackValue = value.size
                 popAndNavigateToPreviousMenu(currentTabType = currentTabType)
@@ -104,8 +101,8 @@ class FragmentStackManager<TabType : Serializable>(
     }
 
     private fun popAndNavigateToPreviousMenu(currentTabType: (TabType) -> Unit) {
-        val tempCurrent: TabType = stackList.firstOrNull() ?: return
-        currentTab = stackList[1]
+        val tempCurrent: TabType = menuTabList.firstOrNull() ?: return
+        currentTab = menuTabList[1]
         currentTabType(currentTab)
 
         val tagStack: Stack<String> = tagStacks[currentTab] ?: return
@@ -117,7 +114,7 @@ class FragmentStackManager<TabType : Serializable>(
             hideFragment = currentFragment,
         )
         currentFragment = targetFragment
-        stackList.updateStackToIndexFirst(tabId = tempCurrent)
+        menuTabList.updateStackToIndexFirst(tabId = tempCurrent)
         menuStacks.removeFirst()
     }
 
@@ -181,17 +178,28 @@ class FragmentStackManager<TabType : Serializable>(
         currentFragment = fragment
     }
 
-    fun showFragment(bundle: Bundle, fragment: Fragment) {
+    fun showFragment(bundle: Bundle, fragment: Fragment, shareView: View?) {
         val shouldAdd: Boolean = bundle.getBoolean(Constants.DATA_KEY_2)
 
-        addShowHideFragment(
-            fragmentManager = fragmentManager,
-            tag = currentTab,
-            showFragment = fragment,
-            hideFragment = getCurrentFragmentFromShownStack(),
-            layoutId = R.id.frame_layout,
-            shouldAddToStack = shouldAdd,
-        )
+        if (shareView == null)
+            addShowHideFragment(
+                fragmentManager = fragmentManager,
+                tag = currentTab,
+                showFragment = fragment,
+                hideFragment = getCurrentFragmentFromShownStack(),
+                layoutId = R.id.frame_layout,
+                shouldAddToStack = shouldAdd,
+            )
+        else
+            addShowHideFragment2(
+                fragmentManager = fragmentManager,
+                tag = currentTab,
+                showFragment = fragment,
+                hideFragment = getCurrentFragmentFromShownStack(),
+                layoutId = R.id.frame_layout,
+                shouldAddToStack = shouldAdd,
+                shareView = shareView,
+            )
         currentFragment = fragment
     }
 
@@ -278,6 +286,28 @@ class FragmentStackManager<TabType : Serializable>(
                 R.anim.anim_slide_in_right,
                 R.anim.anim_slide_out_left,
             )
+            .add(layoutId, showFragment, fragmentTag)
+            .show(showFragment)
+            .hide(hideFragment)
+            .commit()
+        if (shouldAddToStack)
+            tagStacks[tag]?.push(fragmentTag)
+    }
+
+    private fun addShowHideFragment2(
+        fragmentManager: FragmentManager,
+        tag: TabType,
+        showFragment: Fragment,
+        hideFragment: Fragment,
+        @IdRes layoutId: Int,
+        shouldAddToStack: Boolean,
+        shareView: View,
+    ) {
+        val fragmentTag = showFragment.createFragmentTag()
+        fragmentManager
+            .beginTransaction()
+            .addSharedElement(shareView, "testTransition")
+            .setReorderingAllowed(true)
             .add(layoutId, showFragment, fragmentTag)
             .show(showFragment)
             .hide(hideFragment)
