@@ -7,86 +7,112 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.smihajlovski.instabackstack.R
 import com.smihajlovski.instabackstack.common.Constants
+import com.smihajlovski.instabackstack.tmp.applyIf
 import java.io.Serializable
 import java.util.*
 
 class FragmentStackManager<TabType : Serializable>(
+    @IdRes private val containerLayoutId: Int,
     private val fragmentManager: FragmentManager,
     private val menuTabFragmentStacks: HashMap<TabType, Fragment>,
-    private val menuTabList: List<TabType>
+    private val menuTabList: MutableList<TabType>,
 ) {
-    private val tagStacks: HashMap<TabType, Stack<String>>
-    private val menuStacks: MutableList<TabType> = mutableListOf()
+    data class FragmentAnimation(val enter: Int, val exit: Int)
+
+    // fragment 추가 & 삭제 기본 애니메이션
+    private val defaultAddFragmentAnimations: FragmentAnimation =
+        FragmentAnimation(
+            enter = R.anim.anim_slide_in_right,
+            exit = R.anim.anim_slide_out_left,
+        )
+    private val defaultRemoveFragmentAnimations: FragmentAnimation =
+        FragmentAnimation(
+            enter = R.anim.anim_slide_in_left,
+            exit = R.anim.anim_slide_out_right,
+        )
+
+    private val menuTabFragmentTagStacks: HashMap<TabType, Stack<String>>
+    private val menuStacks: MutableList<TabType> = mutableListOf(menuTabList.first())
 
     private lateinit var currentTab: TabType
     private lateinit var currentFragment: Fragment
 
     init {
         val tagStacks = hashMapOf<TabType, Stack<String>>()
-        menuTabList.forEach {
-            tagStacks[it] = Stack<String>()
+        menuTabFragmentStacks.forEach {
+            tagStacks[it.key] = Stack<String>()
         }
-        this.tagStacks = tagStacks
-        this.menuStacks.add(menuTabList.first())
+        this.menuTabFragmentTagStacks = tagStacks
     }
 
-    fun selectTab(tabType: TabType, isFirstTab: Boolean) {
+    // 탭 선택
+    fun selectTab(tabType: TabType) {
         currentTab = tabType
 
-        val tagStack: Stack<String> = tagStacks[tabType] ?: return
-        if (tagStack.size == 0) {
-            /*
-              First time this tab is selected. So add first fragment of that tab.
-              We are adding a new fragment which is not present in stack. So add to stack is true.
-             */
-            val tabFragment: Fragment = menuTabFragmentStacks[tabType] ?: return
-            if (isFirstTab)
-                addInitialTabFragment(
-                    fragmentManager = fragmentManager,
-                    tag = tabType,
-                    fragment = tabFragment,
-                    layoutId = R.id.frame_layout,
-                    shouldAddToStack = true,
-                )
-            else
-                addAdditionalTabFragment(
-                    fragmentManager = fragmentManager,
-                    tag = tabType,
-                    showFragment = tabFragment,
-                    hideFragment = currentFragment,
-                    layoutId = R.id.frame_layout,
-                    shouldAddToStack = true,
-                )
-
-            resolveStackLists(tabId = tabType)
-            currentFragment = tabFragment
-        } else {
-            /*
-             * We are switching tabs, and target tab already has at least one fragment.
-             * Show the target fragment
-             */
-            val targetFragment: Fragment =
-                fragmentManager.findFragmentByTag(tagStack.lastElement()) ?: return
-            showHideTabFragment(
-                fragmentManager = fragmentManager,
-                showFragment = targetFragment,
-                hideFragment = currentFragment
+        val tagStack: Stack<String> = menuTabFragmentTagStacks[tabType] ?: return
+        currentFragment = if (tagStack.size == 0) {
+            // 해당 탭을 처음 눌렀을 경우
+            val menuTabFragment: Fragment = menuTabFragmentStacks[tabType] ?: return
+            addTabFragment(
+                tag = tabType,
+                fragment = menuTabFragment,
             )
-            resolveStackLists(tabId = tabType)
-            currentFragment = targetFragment
+            menuTabFragment
+        } else {
+            // 해당 탑을 한번 이상 눌렀을 경우, 해당 탭에 해당하는 마지막 프래그먼트를 보여줌
+            showHideTabFragment(tabType = tabType) ?: return
         }
+        resolveStackLists(tabType = tabType)
     }
 
-    private fun resolveStackLists(tabId: TabType) {
-        menuTabList.updateStackIndex(tabId = tabId)
-        menuStacks.updateTabStackIndex(tabId = tabId)
+    // 탭 추가
+    private fun addTabFragment(
+        tag: TabType,
+        fragment: Fragment,
+    ) {
+        val fragmentTag = fragment.createFragmentTag()
+        fragmentManager
+            .beginTransaction()
+            .add(containerLayoutId, fragment, fragmentTag)
+            .applyIf(::currentFragment.isInitialized) {
+                // currentFragment 가 초기화 되어 있을 경우 currentFragment 상태를 hide 로 변경후
+                // 새로운 fragment 를 show
+                show(fragment)
+                hide(currentFragment)
+            }
+            .commit()
+        menuTabFragmentTagStacks[tag]?.push(fragmentTag)
     }
 
+    // 탭 변경 후 변경 된 탭 fragment 반환
+    private fun showHideTabFragment(tabType: TabType): Fragment? {
+        if (!::currentFragment.isInitialized) return null
+
+        val tagStack: Stack<String> = menuTabFragmentTagStacks[tabType] ?: return null
+        val showTabFragment: Fragment =
+            fragmentManager.findFragmentByTag(tagStack.peek()) ?: return null
+
+        fragmentManager
+            .beginTransaction()
+            .hide(currentFragment)
+            .show(showTabFragment)
+            .commit()
+        return showTabFragment
+    }
+
+    // 탭 리스트 순서 재정렬
+    // tabType 에 해당하는 탭을 탭 리스트 맨 뒤으로
+    private fun resolveStackLists(tabType: TabType) {
+//        menuTabList.updateDataToFirst(data = tabType)
+        menuStacks.updateExistDataToFirst(data = tabType)
+    }
+
+    // 백버튼 process logic
     fun resolveBackPressed(finish: () -> Unit, currentTabType: (TabType) -> Unit) {
         var stackValue = 0
-        val tagStack: Stack<String> = tagStacks[currentTab] ?: return
-        if (tagStack.size == 1) {
-            val value: Stack<String> = tagStacks[menuTabList[1]] ?: return
+        val tagStack: Stack<String> = menuTabFragmentTagStacks[currentTab] ?: return
+        if (tagStack.size == 1) { // 현재 탭 프래그먼트 스택의 사이즈가 1개인 경우 탭 변경 or 앱 종료
+            val value: Stack<String> = menuTabFragmentTagStacks[menuTabList[1]] ?: return
             if (value.size > 1) {
                 stackValue = value.size
                 popAndNavigateToPreviousMenu(currentTabType = currentTabType)
@@ -95,9 +121,8 @@ class FragmentStackManager<TabType : Serializable>(
                 if (menuStacks.size > 1) navigateToPreviousMenu(currentTabType = currentTabType)
                 else finish()
             }
-        } else {
-            popFragment()
-        }
+        } else // 현재 탭 프래그먼트 스택에 여러 화면이 쌓여있는 경우 해당 탭 프래그먼트 스택에서 pop
+            popFragment(tabType = currentTab)
     }
 
     private fun popAndNavigateToPreviousMenu(currentTabType: (TabType) -> Unit) {
@@ -105,15 +130,8 @@ class FragmentStackManager<TabType : Serializable>(
         currentTab = menuTabList[1]
         currentTabType(currentTab)
 
-        val tagStack: Stack<String> = tagStacks[currentTab] ?: return
-        val targetFragment: Fragment =
-            fragmentManager.findFragmentByTag(tagStack.lastElement()) ?: return
-        showHideTabFragment(
-            fragmentManager = fragmentManager,
-            showFragment = targetFragment,
-            hideFragment = currentFragment,
-        )
-        currentFragment = targetFragment
+        currentFragment = showHideTabFragment(tabType = currentTab) ?: return
+
         menuTabList.updateStackToIndexFirst(tabId = tempCurrent)
         menuStacks.removeFirst()
     }
@@ -123,59 +141,50 @@ class FragmentStackManager<TabType : Serializable>(
         currentTab = menuStacks.firstOrNull() ?: return
         currentTabType(currentTab)
 
-        val tagStack: Stack<String> = tagStacks[currentTab] ?: return
-        val targetFragment: Fragment =
-            fragmentManager.findFragmentByTag(tagStack.lastElement()) ?: return
-        showHideTabFragment(
-            fragmentManager = fragmentManager,
-            showFragment = targetFragment,
-            hideFragment = currentFragment,
-        )
-        currentFragment = targetFragment
+        currentFragment = showHideTabFragment(tabType = currentTab) ?: return
     }
 
-    private fun popFragment() {
-        /*
-         * Select the second last fragment in current tab's stack,
-         * which will be shown after the fragment transaction given below
-         */
-        val tagStack: Stack<String> = tagStacks[currentTab] ?: return
-        val fragmentTag: String = tagStack.elementAt(tagStack.size - 2)
-        val fragment: Fragment = fragmentManager.findFragmentByTag(fragmentTag) ?: return
-
-        /*pop current fragment from stack */
+    // 프래그먼트 스택에서 맨 마지막 fragment 제거
+    private fun popFragment(tabType: TabType) {
+        val tagStack: Stack<String> = menuTabFragmentTagStacks[tabType] ?: return
+        // 스택에서 마지막 프래그먼트 태그 제거
         tagStack.pop()
 
-        removeFragment(
-            fragmentManager = fragmentManager,
-            showFragment = fragment,
-            removeFragment = currentFragment,
-        )
+        // 제거 후 보여질 fragment tag
+        val fragmentTag: String = tagStack.peek()
+        val fragment: Fragment = fragmentManager.findFragmentByTag(fragmentTag) ?: return
+
+        removeCurrentFragment(showFragment = fragment)
 
         currentFragment = fragment
     }
 
+    // 현재 탭 프래그먼트 스택에서 root fragment 만 놔두고 전부 pop
     fun popStackExceptFirst() {
-        val tagStack: Stack<String> = tagStacks[currentTab] ?: return
+        val tagStack: Stack<String> = menuTabFragmentTagStacks[currentTab] ?: return
         if (tagStack.size == 1) return
 
-        do {
-            val peekFragment: Fragment =
-                fragmentManager.findFragmentByTag(tagStack.peek()) ?: return
-            val peekFragmentArgs: Bundle = peekFragment.arguments ?: return
+        fragmentManager
+            .beginTransaction()
+            .apply {
+                // 현재 탭 tag stack 에서 root fragment 나올때까지 stack 탐색하며 fragment manager 에서 제거
+                // root fragment 나오면 show & currentFragment 변경
+                do {
+                    val peekFragment: Fragment =
+                        fragmentManager.findFragmentByTag(tagStack.peek()) ?: return
 
-            fragmentManager.beginTransaction().remove(peekFragment)
-            tagStack.pop()
-        } while (tagStack.isNotEmpty() && peekFragmentArgs.getBoolean("EXTRA_IS_ROOT_FRAGMENT"))
-
-        val fragment: Fragment =
-            fragmentManager.findFragmentByTag(tagStack.firstElement()) ?: return
-        removeFragment(
-            fragmentManager = fragmentManager,
-            showFragment = fragment,
-            removeFragment = currentFragment
-        )
-        currentFragment = fragment
+                    val findRoot: Boolean = if (tagStack.size > 1) {
+                        remove(peekFragment)
+                        tagStack.pop()
+                        false
+                    } else {
+                        show(peekFragment)
+                        currentFragment = peekFragment
+                        true
+                    }
+                } while (!findRoot)
+            }
+            .commit()
     }
 
     fun showFragment(bundle: Bundle, fragment: Fragment, shareView: View?) {
@@ -187,7 +196,6 @@ class FragmentStackManager<TabType : Serializable>(
                 tag = currentTab,
                 showFragment = fragment,
                 hideFragment = getCurrentFragmentFromShownStack(),
-                layoutId = R.id.frame_layout,
                 shouldAddToStack = shouldAdd,
             )
         else
@@ -196,7 +204,6 @@ class FragmentStackManager<TabType : Serializable>(
                 tag = currentTab,
                 showFragment = fragment,
                 hideFragment = getCurrentFragmentFromShownStack(),
-                layoutId = R.id.frame_layout,
                 shouldAddToStack = shouldAdd,
                 shareView = shareView,
             )
@@ -205,67 +212,10 @@ class FragmentStackManager<TabType : Serializable>(
 
     private fun getCurrentFragmentFromShownStack(): Fragment {
         val tagStack: Stack<String> =
-            tagStacks[currentTab] ?: throw NullPointerException("tagStacks[currentTab] is NULL")
+            menuTabFragmentTagStacks[currentTab]
+                ?: throw NullPointerException("tagStacks[currentTab] is NULL")
         return fragmentManager.findFragmentByTag(tagStack.elementAt(tagStack.size - 1))
             ?: throw NullPointerException("can not find findFragmentByTag")
-    }
-
-
-    /**
-     * Add the initial fragment, in most cases the first tab in BottomNavigationView
-     */
-    private fun addInitialTabFragment(
-        fragmentManager: FragmentManager,
-        tag: TabType,
-        fragment: Fragment,
-        @IdRes layoutId: Int,
-        shouldAddToStack: Boolean,
-    ) {
-        val fragmentTag = fragment.createFragmentTag()
-        fragmentManager
-            .beginTransaction()
-            .add(layoutId, fragment, fragmentTag)
-            .commit()
-        if (shouldAddToStack)
-            tagStacks[tag]?.push(fragmentTag)
-    }
-
-    /**
-     * Add additional tab in BottomNavigationView on click, apart from the initial one and for the first time
-     */
-    private fun addAdditionalTabFragment(
-        fragmentManager: FragmentManager,
-        tag: TabType,
-        showFragment: Fragment,
-        hideFragment: Fragment,
-        @IdRes layoutId: Int,
-        shouldAddToStack: Boolean,
-    ) {
-        val fragmentTag = showFragment.createFragmentTag()
-        fragmentManager
-            .beginTransaction()
-            .add(layoutId, showFragment, fragmentTag)
-            .show(showFragment)
-            .hide(hideFragment)
-            .commit()
-        if (shouldAddToStack)
-            tagStacks[tag]?.push(fragmentTag)
-    }
-
-    /**
-     * Hide previous and show current tab fragment if it has already been added
-     * In most cases, when tab is clicked again, not for the first time
-     */
-    private fun showHideTabFragment(
-        fragmentManager: FragmentManager,
-        showFragment: Fragment,
-        hideFragment: Fragment,
-    ) {
-        fragmentManager
-            .beginTransaction()
-            .hide(hideFragment)
-            .show(showFragment)
-            .commit()
     }
 
     /**
@@ -276,7 +226,6 @@ class FragmentStackManager<TabType : Serializable>(
         tag: TabType,
         showFragment: Fragment,
         hideFragment: Fragment,
-        @IdRes layoutId: Int,
         shouldAddToStack: Boolean,
     ) {
         val fragmentTag = showFragment.createFragmentTag()
@@ -286,12 +235,12 @@ class FragmentStackManager<TabType : Serializable>(
                 R.anim.anim_slide_in_right,
                 R.anim.anim_slide_out_left,
             )
-            .add(layoutId, showFragment, fragmentTag)
+            .add(containerLayoutId, showFragment, fragmentTag)
             .show(showFragment)
             .hide(hideFragment)
             .commit()
         if (shouldAddToStack)
-            tagStacks[tag]?.push(fragmentTag)
+            menuTabFragmentTagStacks[tag]?.push(fragmentTag)
     }
 
     private fun addShowHideFragment2(
@@ -299,7 +248,6 @@ class FragmentStackManager<TabType : Serializable>(
         tag: TabType,
         showFragment: Fragment,
         hideFragment: Fragment,
-        @IdRes layoutId: Int,
         shouldAddToStack: Boolean,
         shareView: View,
     ) {
@@ -308,26 +256,26 @@ class FragmentStackManager<TabType : Serializable>(
             .beginTransaction()
             .addSharedElement(shareView, "testTransition")
             .setReorderingAllowed(true)
-            .add(layoutId, showFragment, fragmentTag)
+            .add(containerLayoutId, showFragment, fragmentTag)
             .show(showFragment)
             .hide(hideFragment)
             .commit()
         if (shouldAddToStack)
-            tagStacks[tag]?.push(fragmentTag)
+            menuTabFragmentTagStacks[tag]?.push(fragmentTag)
     }
 
-    private fun removeFragment(
-        fragmentManager: FragmentManager,
+    // 현재 보여지고있는 fragment fragment manager 에서 제거
+    private fun removeCurrentFragment(
         showFragment: Fragment,
-        removeFragment: Fragment,
+        animations: FragmentAnimation? = null,
     ) {
         fragmentManager
             .beginTransaction()
             .setCustomAnimations(
-                R.anim.anim_slide_in_left,
-                R.anim.anim_slide_out_right
+                animations?.enter ?: defaultRemoveFragmentAnimations.enter,
+                animations?.exit ?: defaultRemoveFragmentAnimations.exit
             )
-            .remove(removeFragment)
+            .remove(currentFragment)
             .show(showFragment)
             .commit()
     }

@@ -15,13 +15,13 @@ class HomeFragment :
 
     private val adapter by lazy {
         FeedMainAdapter(click = { view, image ->
-            FragmentUtils.sendActionToActivity(
-                action = FragmentUtils.FragmentType.POST,
-                shouldAdd = true,
-                view = view,
-                image = image,
-                fragmentInteractionCallback = fragmentInteractionCallback
-            )
+//            FragmentUtils.sendActionToActivity(
+//                action = NavigationMenuType.POST,
+//                shouldAdd = true,
+//                view = view,
+//                image = image,
+//                fragmentInteractionCallback = fragmentInteractionCallback
+//            )
         })
     }
 
@@ -30,7 +30,7 @@ class HomeFragment :
 
         binding.button.setOnClickListener {
             FragmentUtils.sendActionToActivity(
-                action = FragmentUtils.FragmentType.DASH_BOARD,
+                action = NavigationMenuType.DASH_BOARD,
                 shouldAdd = true,
                 fragmentInteractionCallback = fragmentInteractionCallback
             )

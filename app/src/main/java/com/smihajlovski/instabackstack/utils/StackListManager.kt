@@ -4,14 +4,28 @@ import java.io.Serializable
 import java.util.*
 
 /**
- * Keeps track of clicked tabs and their respective stacks
- * Swaps the tabs to first position as they're clicked
- * Ensures proper navigation when back presses occur
+ * list element 에서 data 를 맨 앞으로 이동이동
  */
-fun <T : Serializable> List<T>.updateStackIndex(tabId: T) {
-    while (indexOf(tabId) != 0) {
-        val i = indexOf(tabId)
-        Collections.swap(this, i, i - 1)
+fun <T : Serializable> MutableList<T>.updateDataToFirst(data: T) {
+    val index = this.indexOf(data)
+    if (index > 0) {
+        this.remove(data)
+        this.add(0, data)
+    }
+}
+
+/**
+ * list element 에서 data 가 없을 경우 추가해주고,
+ * 있을 경우 해당 data 를 맨 뒤로 이동
+ */
+fun <T : Serializable> MutableList<T>.updateExistDataToFirst(data: T) {
+    if (!contains(data)) add(data)
+    else {
+        val index = indexOf(data)
+        if (index <= size -1) { // 해당 data 가 마지막 index 에 위치해 있지 않은 경우 맨 뒤로 이동
+            remove(data)
+            add(data)
+        }
     }
 }
 
@@ -25,19 +39,5 @@ fun <T : Serializable> List<T>.updateStackToIndexFirst(tabId: T) {
     while (indexOf(tabId) != size - 1) {
         val i = indexOf(tabId)
         Collections.swap(this, moveUp++, i)
-    }
-}
-
-/**
- * Keeps track of the clicked tabs and ensures proper navigation if there are no nested fragments in the tabs
- * When navigating back, the user will end up on the first clicked tab
- * If the first tab is clicked again while navigating, the user will end up on the second tab clicked
- */
-fun <T : Serializable> MutableList<T>.updateTabStackIndex(tabId: T) {
-    if (!contains(tabId))
-        add(tabId)
-    while (indexOf(tabId) != 0) {
-        val i = indexOf(tabId)
-        Collections.swap(this, i, i - 1)
     }
 }

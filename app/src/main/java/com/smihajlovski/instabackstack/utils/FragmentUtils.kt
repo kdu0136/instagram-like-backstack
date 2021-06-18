@@ -25,7 +25,7 @@ object FragmentUtils {
         fragmentInteractionCallback?.onInteractionCallback(bundle, view)
     }
 
-    enum class FragmentType {
-        HOME, DASH_BOARD, NOTIFICATION, POST
-    }
+//    enum class FragmentType {
+//        HOME, DASH_BOARD, NOTIFICATION, POST
+//    }
 }

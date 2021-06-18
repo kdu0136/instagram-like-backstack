@@ -14,7 +14,7 @@ class DashboardFragment:
     override fun onSetupUI() {
         binding.button.setOnClickListener {
             FragmentUtils.sendActionToActivity(
-                action = FragmentUtils.FragmentType.NOTIFICATION,
+                action = NavigationMenuType.NOTIFICATION,
                 shouldAdd = true,
                 fragmentInteractionCallback = fragmentInteractionCallback
             )

@@ -9,13 +9,12 @@ import com.smihajlovski.instabackstack.databinding.ActivityMainBinding
 import com.smihajlovski.instabackstack.ui.base.BaseActivity
 import com.smihajlovski.instabackstack.ui.base.IFragmentInteraction
 import com.smihajlovski.instabackstack.utils.FragmentStackManager
-import com.smihajlovski.instabackstack.utils.FragmentUtils.FragmentType
 import java.util.*
+
+enum class NavigationMenuType { HOME, DASH_BOARD, NOTIFICATION }
 
 class MainActivity :
     BaseActivity<ActivityMainBinding>(resId = R.layout.activity_main), IFragmentInteraction {
-
-    enum class NavigationMenuType { HOME, DASH_BOARD, NOTIFICATION }
 
     private val fragmentStackManager: FragmentStackManager<NavigationMenuType>
 
@@ -31,6 +30,7 @@ class MainActivity :
         tabFragments[NavigationMenuType.NOTIFICATION] = NotificationFragment.newFragment(true)
 
         fragmentStackManager = FragmentStackManager(
+            R.id.frame_layout,
             supportFragmentManager,
             tabFragments,
             tabs
@@ -48,10 +48,7 @@ class MainActivity :
                     else -> null
                 }
                 if (tabType != null)
-                    fragmentStackManager.selectTab(
-                        tabType = tabType,
-                        isFirstTab = tabType == NavigationMenuType.HOME
-                    )
+                    fragmentStackManager.selectTab(tabType = tabType)
 
                 tabType != null
             }
