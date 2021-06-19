@@ -13,7 +13,7 @@ import com.smihajlovski.instabackstack.tmp.NavigatorDestination
 import com.smihajlovski.instabackstack.tmp.createDataBinding
 
 abstract class BaseFragment<VB : ViewDataBinding, NT : NavigatorDestination>(@LayoutRes private val resId: Int) :
-    Fragment(), IBaseFragmentAct {
+        Fragment(), IBaseFragmentAct {
 
     companion object {
         protected var currentTab: String = ""
@@ -64,9 +64,9 @@ abstract class BaseFragment<VB : ViewDataBinding, NT : NavigatorDestination>(@La
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
         printFragmentLifecycle(name = object {}.javaClass.enclosingMethod?.name.toString())
         super.onCreateView(inflater, container, savedInstanceState)

@@ -2,26 +2,24 @@ package com.smihajlovski.instabackstack.ui.main
 
 import android.os.Bundle
 import android.transition.TransitionInflater
-import androidx.core.app.ActivityCompat
 import androidx.core.view.doOnPreDraw
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.smihajlovski.instabackstack.R
-import com.smihajlovski.instabackstack.common.Constants.EXTRA_IS_ROOT_FRAGMENT
 import com.smihajlovski.instabackstack.databinding.FragmentPostBinding
 import com.smihajlovski.instabackstack.tmp.NavigatorDestination
 import com.smihajlovski.instabackstack.ui.base.BaseFragment
 
 class PostFragment :
-    BaseFragment<FragmentPostBinding, NavigatorDestination>(resId = R.layout.fragment_post) {
+        BaseFragment<FragmentPostBinding, NavigatorDestination>(resId = R.layout.fragment_post) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         sharedElementEnterTransition =
-            TransitionInflater.from(context).inflateTransition(android.R.transition.move).apply {
-                duration = 1000L
-            }
+                TransitionInflater.from(context).inflateTransition(android.R.transition.move).apply {
+                    duration = 1000L
+                }
     }
 
     override fun onSetupUI() {
@@ -30,13 +28,13 @@ class PostFragment :
 
         binding.imageView.post {
             Glide.with(binding.imageView)
-                .load(image)
-                .thumbnail(0.33f)
-                .apply(
-                    RequestOptions()
-                        .centerCrop()
-                )
-                .into(binding.imageView)
+                    .load(image)
+                    .thumbnail(0.33f)
+                    .apply(
+                            RequestOptions()
+                                    .centerCrop()
+                    )
+                    .into(binding.imageView)
         }
     }
 
@@ -50,14 +48,9 @@ class PostFragment :
         get() = arguments?.getInt("image") ?: 0
 
     companion object {
-        fun newFragment(isRoot: Boolean, image: Int?): PostFragment {
-            val bundle = Bundle().apply {
-                putBoolean(EXTRA_IS_ROOT_FRAGMENT, isRoot)
-                if (image != null) putInt("image", image)
-            }
-            return PostFragment().apply {
-                arguments = bundle
-            }
-        }
+        fun newFragment(bundle: Bundle? = null): PostFragment =
+                PostFragment().apply {
+                    arguments = bundle
+                }
     }
 }

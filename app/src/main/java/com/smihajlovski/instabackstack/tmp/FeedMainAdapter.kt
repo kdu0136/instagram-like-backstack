@@ -17,14 +17,14 @@ class FeedMainAdapter(private val click: (View, Int) -> Unit)
     private val constraintSet = ConstraintSet()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
-        ViewHolder(
-            binding = DataBindingUtil.inflate(
-                LayoutInflater.from(parent.context),
-                R.layout.item_feed_main,
-                parent,
-                false
+            ViewHolder(
+                    binding = DataBindingUtil.inflate(
+                            LayoutInflater.from(parent.context),
+                            R.layout.item_feed_main,
+                            parent,
+                            false
+                    )
             )
-        )
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position) ?: return
@@ -34,7 +34,7 @@ class FeedMainAdapter(private val click: (View, Int) -> Unit)
     }
 
     inner class ViewHolder(private val binding: ItemFeedMainBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+            RecyclerView.ViewHolder(binding.root) {
         fun display(item: PostThumb) {
             with(binding) {
                 constraintSet.apply {
@@ -48,13 +48,13 @@ class FeedMainAdapter(private val click: (View, Int) -> Unit)
 
             binding.imageView.post {
                 Glide.with(binding.imageView)
-                    .load(item.postThumbnail)
-                    .thumbnail(0.33f)
-                    .apply(
-                        RequestOptions()
-                            .centerCrop()
-                    )
-                    .into(binding.imageView)
+                        .load(item.postThumbnail)
+                        .thumbnail(0.33f)
+                        .apply(
+                                RequestOptions()
+                                        .centerCrop()
+                        )
+                        .into(binding.imageView)
             }
 
             binding.root.setOnClickListener {

@@ -9,15 +9,15 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 
 fun <VB : ViewDataBinding> createDataBinding(
-    activity: Activity,
-    @LayoutRes resId: Int
+        activity: Activity,
+        @LayoutRes resId: Int
 ): VB =
-    DataBindingUtil.setContentView(activity, resId)
+        DataBindingUtil.setContentView(activity, resId)
 
 fun <VB : ViewDataBinding> createDataBinding(
-    @LayoutRes resId: Int,
-    context: Context,
-    parent: ViewGroup? = null,
-    attachToParent: Boolean = false,
+        @LayoutRes resId: Int,
+        context: Context,
+        parent: ViewGroup? = null,
+        attachToParent: Boolean = false,
 ): VB =
-    DataBindingUtil.inflate(LayoutInflater.from(context), resId, parent, attachToParent)
+        DataBindingUtil.inflate(LayoutInflater.from(context), resId, parent, attachToParent)

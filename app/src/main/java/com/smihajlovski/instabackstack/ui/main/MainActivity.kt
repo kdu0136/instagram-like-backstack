@@ -1,20 +1,21 @@
 package com.smihajlovski.instabackstack.ui.main
 
 import android.os.Bundle
-import android.view.View
 import androidx.fragment.app.Fragment
 import com.smihajlovski.instabackstack.R
-import com.smihajlovski.instabackstack.common.Constants
 import com.smihajlovski.instabackstack.databinding.ActivityMainBinding
 import com.smihajlovski.instabackstack.ui.base.BaseActivity
 import com.smihajlovski.instabackstack.ui.base.IFragmentInteraction
 import com.smihajlovski.instabackstack.utils.FragmentStackManager
+import com.smihajlovski.instabackstack.utils.FragmentUtils
 import java.util.*
 
 enum class NavigationMenuType { HOME, DASH_BOARD, NOTIFICATION }
+enum class FragmentType { HOME, DASH_BOARD, NOTIFICATION, POST }
 
 class MainActivity :
-    BaseActivity<ActivityMainBinding>(resId = R.layout.activity_main), IFragmentInteraction {
+        BaseActivity<ActivityMainBinding>(resId = R.layout.activity_main),
+        IFragmentInteraction {
 
     private val fragmentStackManager: FragmentStackManager<NavigationMenuType>
 
@@ -25,15 +26,15 @@ class MainActivity :
         tabs.add(NavigationMenuType.NOTIFICATION)
 
         val tabFragments = HashMap<NavigationMenuType, Fragment>()
-        tabFragments[NavigationMenuType.HOME] = HomeFragment.newFragment(true)
-        tabFragments[NavigationMenuType.DASH_BOARD] = DashboardFragment.newFragment(true)
-        tabFragments[NavigationMenuType.NOTIFICATION] = NotificationFragment.newFragment(true)
+        tabFragments[NavigationMenuType.HOME] = HomeFragment.newFragment()
+        tabFragments[NavigationMenuType.DASH_BOARD] = DashboardFragment.newFragment()
+        tabFragments[NavigationMenuType.NOTIFICATION] = NotificationFragment.newFragment()
 
         fragmentStackManager = FragmentStackManager(
-            R.id.frame_layout,
-            supportFragmentManager,
-            tabFragments,
-            tabs
+                R.id.frame_layout,
+                supportFragmentManager,
+                tabFragments,
+                NavigationMenuType.HOME,
         )
     }
 
@@ -66,36 +67,40 @@ class MainActivity :
     override fun observeViewModel() {
     }
 
-    override fun onInteractionCallback(bundle: Bundle, view: View?) {
-        val action: NavigationMenuType =
-            (bundle.getSerializable(Constants.ACTION) as? NavigationMenuType) ?: return
-        val fragment: Fragment? = when (action) {
-            NavigationMenuType.HOME -> null
-            NavigationMenuType.DASH_BOARD -> DashboardFragment.newFragment(isRoot = false)
-            NavigationMenuType.NOTIFICATION -> NotificationFragment.newFragment(isRoot = false)
-//            FragmentType.POST -> PostFragment.newFragment(isRoot = false, image = bundle.getInt("image"))
+    override fun onInteractionCallback(
+            actionBundle: Bundle,
+            fragmentBundle: Bundle?
+    ) {
+        val action: FragmentType =
+                (actionBundle.getSerializable(FragmentUtils.ACTION) as? FragmentType) ?: return
+        val enterAnimations: FragmentStackManager.FragmentAnimation? =
+                actionBundle.getSerializable(FragmentUtils.ENTER_ANIMATION) as? FragmentStackManager.FragmentAnimation
+        val exitAnimations: FragmentStackManager.FragmentAnimation? =
+                actionBundle.getSerializable(FragmentUtils.EXIT_ANIMATION) as? FragmentStackManager.FragmentAnimation
+        val fragment: Fragment = when (action) {
+            FragmentType.HOME -> HomeFragment.newFragment()
+            FragmentType.DASH_BOARD -> DashboardFragment.newFragment()
+            FragmentType.NOTIFICATION -> NotificationFragment.newFragment()
+            FragmentType.POST -> PostFragment.newFragment(bundle = fragmentBundle)
         }
-        if (fragment != null) {
-            fragmentStackManager.showFragment(
-                bundle = bundle,
+        fragmentStackManager.showFragment(
                 fragment = fragment,
-                shareView = view
-            )
-        }
+                enterAnimations = enterAnimations,
+                exitAnimations = exitAnimations,
+        )
     }
 
     override fun onBackPressed() {
         fragmentStackManager.resolveBackPressed(
-            finish = this::finish,
-            currentTabType = {
-                val selectItemId = when (it) {
-                    NavigationMenuType.HOME -> R.id.tab_home
-                    NavigationMenuType.DASH_BOARD -> R.id.tab_dashboard
-                    NavigationMenuType.NOTIFICATION -> R.id.tab_notifications
-                    else -> null
-                } ?: return@resolveBackPressed
-                binding.bottomNavigationView.selectedItemId = selectItemId
-            }
+                finish = this::finish,
+                changeTabType = {
+                    val selectItemId = when (it) {
+                        NavigationMenuType.HOME -> R.id.tab_home
+                        NavigationMenuType.DASH_BOARD -> R.id.tab_dashboard
+                        NavigationMenuType.NOTIFICATION -> R.id.tab_notifications
+                    }
+                    binding.bottomNavigationView.selectedItemId = selectItemId
+                }
         )
     }
 }

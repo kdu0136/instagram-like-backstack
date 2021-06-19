@@ -2,7 +2,6 @@ package com.smihajlovski.instabackstack.ui.main
 
 import android.os.Bundle
 import com.smihajlovski.instabackstack.R
-import com.smihajlovski.instabackstack.common.Constants.EXTRA_IS_ROOT_FRAGMENT
 import com.smihajlovski.instabackstack.databinding.FragmentHomeBinding
 import com.smihajlovski.instabackstack.tmp.Dummy
 import com.smihajlovski.instabackstack.tmp.FeedMainAdapter
@@ -11,10 +10,17 @@ import com.smihajlovski.instabackstack.ui.base.BaseFragment
 import com.smihajlovski.instabackstack.utils.FragmentUtils
 
 class HomeFragment :
-    BaseFragment<FragmentHomeBinding, NavigatorDestination>(resId = R.layout.fragment_home) {
+        BaseFragment<FragmentHomeBinding, NavigatorDestination>(resId = R.layout.fragment_home) {
 
     private val adapter by lazy {
         FeedMainAdapter(click = { view, image ->
+            FragmentUtils.sendActionToActivity(
+                    actionBundle = FragmentUtils.FragmentActionBundle(action = FragmentType.POST),
+                    fragmentBundle = Bundle().apply {
+                        putInt("image", image)
+                    },
+                    fragmentInteractionCallback = fragmentInteractionCallback
+            )
 //            FragmentUtils.sendActionToActivity(
 //                action = NavigationMenuType.POST,
 //                shouldAdd = true,
@@ -30,9 +36,8 @@ class HomeFragment :
 
         binding.button.setOnClickListener {
             FragmentUtils.sendActionToActivity(
-                action = NavigationMenuType.DASH_BOARD,
-                shouldAdd = true,
-                fragmentInteractionCallback = fragmentInteractionCallback
+                    actionBundle = FragmentUtils.FragmentActionBundle(action = FragmentType.DASH_BOARD),
+                    fragmentInteractionCallback = fragmentInteractionCallback
             )
         }
     }
@@ -45,13 +50,9 @@ class HomeFragment :
     }
 
     companion object {
-        fun newFragment(isRoot: Boolean): HomeFragment {
-            val bundle = Bundle().apply {
-                putBoolean(EXTRA_IS_ROOT_FRAGMENT, isRoot)
-            }
-            return HomeFragment().apply {
-                arguments = bundle
-            }
-        }
+        fun newFragment(bundle: Bundle? = null): HomeFragment =
+                HomeFragment().apply {
+                    arguments = bundle
+                }
     }
 }

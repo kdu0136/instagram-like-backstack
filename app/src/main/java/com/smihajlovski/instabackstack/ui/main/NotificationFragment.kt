@@ -2,21 +2,19 @@ package com.smihajlovski.instabackstack.ui.main
 
 import android.os.Bundle
 import com.smihajlovski.instabackstack.R
-import com.smihajlovski.instabackstack.common.Constants.EXTRA_IS_ROOT_FRAGMENT
 import com.smihajlovski.instabackstack.databinding.FragmentNotificationsBinding
 import com.smihajlovski.instabackstack.tmp.NavigatorDestination
 import com.smihajlovski.instabackstack.ui.base.BaseFragment
 import com.smihajlovski.instabackstack.utils.FragmentUtils
 
-class NotificationFragment:
-    BaseFragment<FragmentNotificationsBinding, NavigatorDestination>(resId = R.layout.fragment_notifications) {
+class NotificationFragment :
+        BaseFragment<FragmentNotificationsBinding, NavigatorDestination>(resId = R.layout.fragment_notifications) {
 
     override fun onSetupUI() {
         binding.button.setOnClickListener {
             FragmentUtils.sendActionToActivity(
-                action = NavigationMenuType.DASH_BOARD,
-                shouldAdd = true,
-                fragmentInteractionCallback = fragmentInteractionCallback
+                    actionBundle = FragmentUtils.FragmentActionBundle(action = FragmentType.DASH_BOARD),
+                    fragmentInteractionCallback = fragmentInteractionCallback
             )
         }
     }
@@ -28,13 +26,9 @@ class NotificationFragment:
     }
 
     companion object {
-        fun newFragment(isRoot: Boolean): NotificationFragment {
-            val bundle = Bundle().apply {
-                putBoolean(EXTRA_IS_ROOT_FRAGMENT, isRoot)
-            }
-            return NotificationFragment().apply {
-                arguments = bundle
-            }
-        }
+        fun newFragment(bundle: Bundle? = null): NotificationFragment =
+                NotificationFragment().apply {
+                    arguments = bundle
+                }
     }
 }

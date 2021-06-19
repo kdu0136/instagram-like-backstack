@@ -5,12 +5,11 @@ import android.os.Bundle
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.ViewDataBinding
-import com.smihajlovski.instabackstack.R
 import com.smihajlovski.instabackstack.tmp.PrintLog
 import com.smihajlovski.instabackstack.tmp.createDataBinding
 
 abstract class BaseActivity<VB : ViewDataBinding>(@LayoutRes resId: Int) :
-    AppCompatActivity() {
+        AppCompatActivity() {
     protected val activityTag = javaClass.simpleName
 
     protected val binding: VB by lazy { createDataBinding(activity = this, resId = resId) }
