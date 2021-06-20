@@ -1,7 +1,6 @@
 package com.smihajlovski.instabackstack.utils
 
 import android.os.Bundle
-import com.smihajlovski.instabackstack.ui.base.IFragmentInteraction
 import java.io.Serializable
 
 object FragmentUtils {

@@ -1,4 +1,4 @@
-package com.smihajlovski.instabackstack.ui.base
+package com.smihajlovski.instabackstack.utils
 
 import android.os.Bundle
 

@@ -10,7 +10,9 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import com.smihajlovski.instabackstack.tmp.NavigatorDestination
+import com.smihajlovski.instabackstack.tmp.PrintLog
 import com.smihajlovski.instabackstack.tmp.createDataBinding
+import com.smihajlovski.instabackstack.utils.IFragmentInteraction
 
 abstract class BaseFragment<VB : ViewDataBinding, NT : NavigatorDestination>(@LayoutRes private val resId: Int) :
         Fragment(), IBaseFragmentAct {

@@ -42,8 +42,9 @@ class HomeFragment :
         }
     }
 
+    private val dumy = Dummy.getMainFeed(1, 200)
     override fun observeViewModel() {
-        adapter.submitList(Dummy.getMainFeed(1, 200))
+        adapter.submitList(dumy)
     }
 
     override fun runNavigate(navigate: NavigatorDestination) {

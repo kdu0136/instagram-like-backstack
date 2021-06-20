@@ -5,9 +5,9 @@ import androidx.fragment.app.Fragment
 import com.smihajlovski.instabackstack.R
 import com.smihajlovski.instabackstack.databinding.ActivityMainBinding
 import com.smihajlovski.instabackstack.ui.base.BaseActivity
-import com.smihajlovski.instabackstack.ui.base.IFragmentInteraction
 import com.smihajlovski.instabackstack.utils.FragmentStackManager
 import com.smihajlovski.instabackstack.utils.FragmentUtils
+import com.smihajlovski.instabackstack.utils.IFragmentInteraction
 import java.util.*
 
 enum class NavigationMenuType { HOME, DASH_BOARD, NOTIFICATION }
