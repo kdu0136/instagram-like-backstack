@@ -29,12 +29,21 @@ class StackNavigator constructor(
 
     init {
         fragmentManger.registerFragmentLifecycleCallbacks(object: FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) = auditFragment(f)
+//            override fun onFragmentCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) = auditFragment(f)
         }, false)
     }
 
     override fun push(fragment: Fragment, tag: String): Boolean {
-        TODO("Not yet implemented")
+        val tags = fragmentTags
+        val currentFragmentTag = tags.lastOrNull()
+        if (currentFragmentTag != null && currentFragmentTag == tag) return false
+
+        val fragmentAlreadyExist = tags.contains(tag)
+        val fragmentShown = !fragmentAlreadyExist
+        val fragmentToShow =
+                (if (fragmentAlreadyExist) fragmentManger.findFragmentByTag(tag) else fragment) ?: throw NullPointerException("MSG DODGY FRAGMENT")
+
+//        fragmentManger.
     }
 
     override fun pop(): Boolean {
