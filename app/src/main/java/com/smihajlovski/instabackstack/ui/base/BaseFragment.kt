@@ -148,6 +148,6 @@ abstract class BaseFragment<VB : ViewDataBinding, NT : NavigatorDestination>(@La
     }
 
     private fun printFragmentLifecycle(name: String) {
-//        PrintLog.d(javaClass.simpleName, name, fragmentTag)
+        PrintLog.d(javaClass.simpleName, name, fragmentTag)
     }
 }

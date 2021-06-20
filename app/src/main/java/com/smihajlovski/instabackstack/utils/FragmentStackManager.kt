@@ -3,6 +3,7 @@ package com.smihajlovski.instabackstack.utils
 import androidx.annotation.IdRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.commit
 import com.smihajlovski.instabackstack.R
 import com.smihajlovski.instabackstack.tmp.applyIf
 import java.io.Serializable
@@ -86,16 +87,15 @@ class FragmentStackManager<TabType : Serializable>(
             fragment: Fragment,
     ) {
         val fragmentTag = fragment.createFragmentTag()
-        fragmentManager
-                .beginTransaction()
-                .add(containerLayoutId, fragment, fragmentTag)
-                .applyIf(::currentFragment.isInitialized) {
-                    // currentFragment 가 초기화 되어 있을 경우 currentFragment 상태를 hide 로 변경후
-                    // 새로운 fragment 를 show
-                    show(fragment)
-                    hide(currentFragment)
-                }
-                .commit()
+        fragmentManager.commit {
+            add(containerLayoutId, fragment, fragmentTag)
+            applyIf(::currentFragment.isInitialized) {
+                // currentFragment 가 초기화 되어 있을 경우 currentFragment 상태를 hide 로 변경후
+                // 새로운 fragment 를 show
+                attach(fragment)
+                detach(currentFragment)
+            }
+        }
         menuTabFragmentTagStacks[tag]?.push(FragmentTagStackData(tag = fragmentTag))
     }
 
@@ -107,11 +107,15 @@ class FragmentStackManager<TabType : Serializable>(
         val showTabFragment: Fragment =
                 fragmentManager.findFragmentByTag(tagStack.peek().tag) ?: return null
 
-        fragmentManager
-                .beginTransaction()
-                .hide(currentFragment)
-                .show(showTabFragment)
-                .commit()
+        fragmentManager.commit {
+            attach(showTabFragment)
+            detach(currentFragment)
+        }
+//        fragmentManager
+//                .beginTransaction()
+//                .hide(currentFragment)
+//                .show(showTabFragment)
+//                .commit()
         return showTabFragment
     }
 
@@ -153,27 +157,46 @@ class FragmentStackManager<TabType : Serializable>(
         val tagStack: Stack<FragmentTagStackData> = menuTabFragmentTagStacks[currentTab] ?: return
         if (tagStack.size == 1) return
 
-        fragmentManager
-                .beginTransaction()
-                .apply {
-                    // 현재 탭 tag stack 에서 root fragment 나올때까지 stack 탐색하며 fragment manager 에서 제거
-                    // root fragment 나오면 show & currentFragment 변경
-                    do {
-                        val peekFragment: Fragment =
-                                fragmentManager.findFragmentByTag(tagStack.peek().tag) ?: return
+        fragmentManager.commit {
+            // 현재 탭 tag stack 에서 root fragment 나올때까지 stack 탐색하며 fragment manager 에서 제거
+            // root fragment 나오면 show & currentFragment 변경
+            do {
+                val peekFragment: Fragment =
+                        fragmentManager.findFragmentByTag(tagStack.peek().tag) ?: return
 
-                        val findRoot: Boolean = if (tagStack.size > 1) {
-                            remove(peekFragment)
-                            tagStack.pop()
-                            false
-                        } else {
-                            show(peekFragment)
-                            currentFragment = peekFragment
-                            true
-                        }
-                    } while (!findRoot)
+                val findRoot: Boolean = if (tagStack.size > 1) {
+                    remove(peekFragment)
+                    tagStack.pop()
+                    false
+                } else {
+                    attach(peekFragment)
+                    currentFragment = peekFragment
+                    true
                 }
-                .commit()
+            } while (!findRoot)
+        }
+
+//        fragmentManager
+//                .beginTransaction()
+//                .apply {
+//                    // 현재 탭 tag stack 에서 root fragment 나올때까지 stack 탐색하며 fragment manager 에서 제거
+//                    // root fragment 나오면 show & currentFragment 변경
+//                    do {
+//                        val peekFragment: Fragment =
+//                                fragmentManager.findFragmentByTag(tagStack.peek().tag) ?: return
+//
+//                        val findRoot: Boolean = if (tagStack.size > 1) {
+//                            remove(peekFragment)
+//                            tagStack.pop()
+//                            false
+//                        } else {
+//                            show(peekFragment)
+//                            currentFragment = peekFragment
+//                            true
+//                        }
+//                    } while (!findRoot)
+//                }
+//                .commit()
     }
 
     // 현재 보여지고있는 fragment 를 fragment manager 에서 숨기고
@@ -201,16 +224,25 @@ class FragmentStackManager<TabType : Serializable>(
             exitAnimations: FragmentAnimation? = null,
     ) {
         val fragmentTag = showFragment.createFragmentTag()
-        fragmentManager
-                .beginTransaction()
-                .setCustomAnimations(
-                        enterAnimations?.enter ?: defaultAddFragmentAnimations.enter,
-                        enterAnimations?.exit ?: defaultAddFragmentAnimations.exit
-                )
-                .add(containerLayoutId, showFragment, fragmentTag)
-                .show(showFragment)
-                .hide(currentFragment)
-                .commit()
+        fragmentManager.commit {
+            setCustomAnimations(
+                    enterAnimations?.enter ?: defaultAddFragmentAnimations.enter,
+                    enterAnimations?.exit ?: defaultAddFragmentAnimations.exit
+            )
+            add(containerLayoutId, showFragment, fragmentTag)
+            attach(showFragment)
+            detach(currentFragment)
+        }
+//        fragmentManager
+//                .beginTransaction()
+//                .setCustomAnimations(
+//                        enterAnimations?.enter ?: defaultAddFragmentAnimations.enter,
+//                        enterAnimations?.exit ?: defaultAddFragmentAnimations.exit
+//                )
+//                .add(containerLayoutId, showFragment, fragmentTag)
+//                .show(showFragment)
+//                .hide(currentFragment)
+//                .commit()
         menuTabFragmentTagStacks[currentTab]?.push(
                 FragmentTagStackData(tag = fragmentTag, exitAni = exitAnimations)
         )
@@ -222,15 +254,23 @@ class FragmentStackManager<TabType : Serializable>(
             showFragment: Fragment,
             animations: FragmentAnimation? = null,
     ) {
-        fragmentManager
-                .beginTransaction()
-                .setCustomAnimations(
-                        animations?.enter ?: defaultRemoveFragmentAnimations.enter,
-                        animations?.exit ?: defaultRemoveFragmentAnimations.exit
-                )
-                .remove(currentFragment)
-                .show(showFragment)
-                .commit()
+        fragmentManager.commit {
+            setCustomAnimations(
+                    animations?.enter ?: defaultRemoveFragmentAnimations.enter,
+                    animations?.exit ?: defaultRemoveFragmentAnimations.exit
+            )
+            remove(currentFragment)
+            attach(showFragment)
+        }
+//        fragmentManager
+//                .beginTransaction()
+//                .setCustomAnimations(
+//                        animations?.enter ?: defaultRemoveFragmentAnimations.enter,
+//                        animations?.exit ?: defaultRemoveFragmentAnimations.exit
+//                )
+//                .remove(currentFragment)
+//                .show(showFragment)
+//                .commit()
     }
 
     private fun Fragment.createFragmentTag(): String = "${javaClass.simpleName}:${hashCode()}"
