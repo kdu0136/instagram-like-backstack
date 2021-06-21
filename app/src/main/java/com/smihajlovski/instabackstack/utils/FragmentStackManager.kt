@@ -19,12 +19,12 @@ class FragmentStackManager<TabType : Serializable>(
     data class FragmentTagStackData(val tag: String, val exitAni: FragmentAnimation? = null)
 
     // fragment 추가 & 삭제 기본 애니메이션
-    private val defaultAddFragmentAnimations: FragmentAnimation =
+    private val defaultEnterFragmentAnimations: FragmentAnimation =
             FragmentAnimation(
                     enter = R.anim.anim_slide_in_right,
                     exit = R.anim.anim_slide_out_left,
             )
-    private val defaultRemoveFragmentAnimations: FragmentAnimation =
+    private val defaultExitFragmentAnimations: FragmentAnimation =
             FragmentAnimation(
                     enter = R.anim.anim_slide_in_left,
                     exit = R.anim.anim_slide_out_right,
@@ -91,7 +91,7 @@ class FragmentStackManager<TabType : Serializable>(
             add(containerLayoutId, fragment, fragmentTag)
             applyIf(::currentFragment.isInitialized) {
                 // currentFragment 가 초기화 되어 있을 경우 currentFragment 상태를 hide 로 변경후
-                // 새로운 fragment 를 show
+                // 새로운 fragment 를 attach
                 attach(fragment)
                 detach(currentFragment)
             }
@@ -111,11 +111,6 @@ class FragmentStackManager<TabType : Serializable>(
             attach(showTabFragment)
             detach(currentFragment)
         }
-//        fragmentManager
-//                .beginTransaction()
-//                .hide(currentFragment)
-//                .show(showTabFragment)
-//                .commit()
         return showTabFragment
     }
 
@@ -175,32 +170,10 @@ class FragmentStackManager<TabType : Serializable>(
                 }
             } while (!findRoot)
         }
-
-//        fragmentManager
-//                .beginTransaction()
-//                .apply {
-//                    // 현재 탭 tag stack 에서 root fragment 나올때까지 stack 탐색하며 fragment manager 에서 제거
-//                    // root fragment 나오면 show & currentFragment 변경
-//                    do {
-//                        val peekFragment: Fragment =
-//                                fragmentManager.findFragmentByTag(tagStack.peek().tag) ?: return
-//
-//                        val findRoot: Boolean = if (tagStack.size > 1) {
-//                            remove(peekFragment)
-//                            tagStack.pop()
-//                            false
-//                        } else {
-//                            show(peekFragment)
-//                            currentFragment = peekFragment
-//                            true
-//                        }
-//                    } while (!findRoot)
-//                }
-//                .commit()
     }
 
-    // 현재 보여지고있는 fragment 를 fragment manager 에서 숨기고
-    // 새로운 fragment 를 보여줌
+    // 현재 보여지고있는 fragment 를 fragment manager 에서 detach
+    // 새로운 fragment 를 attach
     fun showFragment(
             fragment: Fragment,
             enterAnimations: FragmentAnimation?,
@@ -215,8 +188,8 @@ class FragmentStackManager<TabType : Serializable>(
         currentFragment = fragment
     }
 
-    // 현재 보여지고있는 fragment 를 fragment manager 에서 숨기고
-    // 새로운 fragment 를 보여줌
+    // 현재 보여지고있는 fragment 를 fragment manager 에서 detach
+    // 새로운 fragment 를 attach
     private fun addShowFragment(
             fragmentManager: FragmentManager,
             showFragment: Fragment,
@@ -226,51 +199,32 @@ class FragmentStackManager<TabType : Serializable>(
         val fragmentTag = showFragment.createFragmentTag()
         fragmentManager.commit {
             setCustomAnimations(
-                    enterAnimations?.enter ?: defaultAddFragmentAnimations.enter,
-                    enterAnimations?.exit ?: defaultAddFragmentAnimations.exit
+                    enterAnimations?.enter ?: defaultEnterFragmentAnimations.enter,
+                    enterAnimations?.exit ?: defaultEnterFragmentAnimations.exit
             )
             add(containerLayoutId, showFragment, fragmentTag)
             attach(showFragment)
             detach(currentFragment)
         }
-//        fragmentManager
-//                .beginTransaction()
-//                .setCustomAnimations(
-//                        enterAnimations?.enter ?: defaultAddFragmentAnimations.enter,
-//                        enterAnimations?.exit ?: defaultAddFragmentAnimations.exit
-//                )
-//                .add(containerLayoutId, showFragment, fragmentTag)
-//                .show(showFragment)
-//                .hide(currentFragment)
-//                .commit()
         menuTabFragmentTagStacks[currentTab]?.push(
                 FragmentTagStackData(tag = fragmentTag, exitAni = exitAnimations)
         )
     }
 
     // 현재 보여지고있는 fragment 를 fragment manager 에서 제거하고
-    // 새로운 fragment 를 보여줌
+    // 새로운 fragment 를 attach
     private fun removeCurrentFragment(
             showFragment: Fragment,
             animations: FragmentAnimation? = null,
     ) {
         fragmentManager.commit {
             setCustomAnimations(
-                    animations?.enter ?: defaultRemoveFragmentAnimations.enter,
-                    animations?.exit ?: defaultRemoveFragmentAnimations.exit
+                    animations?.enter ?: defaultExitFragmentAnimations.enter,
+                    animations?.exit ?: defaultExitFragmentAnimations.exit
             )
             remove(currentFragment)
             attach(showFragment)
         }
-//        fragmentManager
-//                .beginTransaction()
-//                .setCustomAnimations(
-//                        animations?.enter ?: defaultRemoveFragmentAnimations.enter,
-//                        animations?.exit ?: defaultRemoveFragmentAnimations.exit
-//                )
-//                .remove(currentFragment)
-//                .show(showFragment)
-//                .commit()
     }
 
     private fun Fragment.createFragmentTag(): String = "${javaClass.simpleName}:${hashCode()}"
